@@ -1,25 +1,33 @@
-// Write a C Program that demonstrates redirection of standard output to a file
+// Write a C program that redirects standard output to a file output.txt. (use of dup and open system
+// call).
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 int main() {
-    // Open a file for writing, redirecting stdout to this file
-    FILE *file = freopen("output.txt", "w", stdout);
+    int file_descriptor;
     
-    // Check if the file redirection was successful
-    if (file == NULL) {
-        perror("Error redirecting output");
-        return EXIT_FAILURE;
+    // Open the file output.txt in write mode. Create it if it doesn't exist.
+    file_descriptor = open("output.txt", O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (file_descriptor < 0) {
+        perror("open");
+        exit(EXIT_FAILURE);
     }
 
-    // This output will go to output.txt instead of the console
-    printf("Hello, World!\n");
-    printf("This is an example of output redirection.\n");
-    printf("All this text will be written to the file 'output.txt'.\n");
+    // Duplicate the file descriptor to standard output (stdout)
+    if (dup2(file_descriptor, STDOUT_FILENO) < 0) {
+        perror("dup2");
+        exit(EXIT_FAILURE);
+    }
 
-    // Close the file (though it will be closed automatically on exit)
-    fclose(file); // Not necessary, but good practice
+    // Close the original file descriptor as it's no longer needed
+    close(file_descriptor);
 
-    return EXIT_SUCCESS;
+    // Now all output to stdout will be redirected to output.txt
+    printf("This will be written to output.txt\n");
+    printf("Standard output redirection is successful!\n");
+
+    return 0;
 }
