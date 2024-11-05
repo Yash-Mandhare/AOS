@@ -1,5 +1,4 @@
-// Display all the files from current directory whose size is greater that n Bytes Where n is accept
-// from user.
+// Display all the files from current directory whose size is greater that n Bytes Where n is accept from user.
 
 
 #include <stdio.h>

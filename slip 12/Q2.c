@@ -19,6 +19,7 @@ int compare(const void *a, const void *b) {
 }
 
 int main(int argc, char *argv[]) {
+    int i;
     if (argc < 2) {
         printf("Usage: %s <file1> <file2> ...\n", argv[0]);
         return 1;
@@ -31,7 +32,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Get sizes of the files
-    for (int i = 1; i < argc; i++) {
+    for (i = 1; i < argc; i++) {
         struct stat fileStat;
         if (stat(argv[i], &fileStat) == -1) {
             perror(argv[i]);
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]) {
 
     // Display the filenames in ascending order according to their sizes
     printf("Files sorted by size (ascending order):\n");
-    for (int i = 0; i < argc - 1; i++) {
+    for ( i= 0; i < argc - 1; i++) {
         printf("%s: %ld bytes\n", files[i].filename, files[i].size);
     }
 

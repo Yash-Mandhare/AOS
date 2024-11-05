@@ -1,6 +1,7 @@
 // Write a C program which creates a child process to run linux/ unix command or any user defined
 // program. The parent process set the signal handler for death of child signal and Alarm signal. If
-// a child process does not complete its execution in 5 second then parent process kills child process
+// a child process does not complete its execution in 5 second then parent process kills child process.
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,23 +9,35 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <time.h>
 
-void handle_sighup(int sig) {
-    printf("Child received SIGHUP signal.\n");
+pid_t child_pid; // Global variable to hold the child process ID
+
+// Signal handler for SIGCHLD (child termination)
+void handle_sigchld(int sig) {
+	int errno;
+    int saved_errno = errno;
+    while (waitpid(-1, NULL, WNOHANG) > 0);
+    errno = saved_errno; // Restore errno
 }
 
-void handle_sigint(int sig) {
-    printf("Child received SIGINT signal.\n");
+// Signal handler for SIGALRM
+void handle_sigalrm(int sig) {
+    printf("\nChild process did not complete in 5 seconds. Killing child process (PID: %d)...\n", child_pid);
+    kill(child_pid, SIGKILL); // Kill the child process
 }
 
-void handle_sigquit(int sig) {
-    printf("My DADDY has Killed me!!!\n");
-    exit(0); // Exit the child process
-}
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <command>\n", argv[0]);
+        return 1;
+    }
 
-int main() {
-    pid_t child_pid = fork(); // Create a child process
+    // Set up signal handlers
+    signal(SIGCHLD, handle_sigchld);
+    signal(SIGALRM, handle_sigalrm);
+
+    // Fork the process to create a child
+    child_pid = fork();
 
     if (child_pid < 0) {
         perror("fork failed");
@@ -33,35 +46,22 @@ int main() {
 
     if (child_pid == 0) {
         // Child process
-        // Set up signal handlers
-        signal(SIGHUP, handle_sighup);
-        signal(SIGINT, handle_sigint);
-        signal(SIGQUIT, handle_sigquit);
+        printf("Child process (PID: %d) is executing the command: %s\n", getpid(), argv[1]);
+        
+        // Execute the command passed as argument
+        execvp(argv[1], &argv[1]);
 
-        // Infinite loop to keep the child process running
+        // If execvp returns, it means there was an error
+        perror("exec failed");
+        exit(1);
+    } else {
+        // Parent process
+        alarm(5); // Set an alarm for 5 seconds
+
+        // Wait for the child process to terminate
         while (1) {
             pause(); // Wait for signals
         }
-    } else {
-        // Parent process
-        for (int i = 0; i < 10; i++) {
-            sleep(3); // Wait for 3 seconds
-            if (i < 4) {
-                // Send SIGHUP or SIGINT
-                if (i % 2 == 0) {
-                    kill(child_pid, SIGHUP); // Send SIGHUP on even iterations
-                } else {
-                    kill(child_pid, SIGINT); // Send SIGINT on odd iterations
-                }
-            }
-        }
-
-        // After 15 seconds, send SIGQUIT
-        sleep(3); // Wait another 3 seconds before sending SIGQUIT
-        kill(child_pid, SIGQUIT); // Send SIGQUIT
-
-        // Wait for the child process to terminate
-        wait(NULL); // Clean up the child process
     }
 
     return 0;
@@ -69,9 +69,7 @@ int main() {
 
 
 
-// Child received SIGHUP signal.
-// Child received SIGINT signal.
-// Child received SIGHUP signal.
-// Child received SIGINT signal.
-// Child received SIGHUP signal.
-// My Papa has Killed me!!!
+// [smile@localhost slip os 6sem]$ ./a.out sleep 10
+// Child process (PID: 6374) is executing the command: sleep
+
+// Child process did not complete in 5 seconds. Killing child process (PID: 6374)...
