@@ -7,23 +7,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 
-pid_t child_pid; // Global variable to hold the child process ID
+pid_t pid;
 
-// Signal handler for SIGCHLD (child termination)
 void handle_sigchld(int sig) {
-	int errno;
-    int saved_errno = errno;
-    while (waitpid(-1, NULL, WNOHANG) > 0);
-    errno = saved_errno; // Restore errno
+    wait(NULL); // Wait for any child process to terminate
 }
 
-// Signal handler for SIGALRM
 void handle_sigalrm(int sig) {
-    printf("\nChild process did not complete in 5 seconds. Killing child process (PID: %d)...\n", child_pid);
-    kill(child_pid, SIGKILL); // Kill the child process
+    printf("\nChild process did not complete in 5 seconds. Killing child process...\n");
+    kill(pid, SIGKILL); // Kill the child process
 }
 
 int main(int argc, char *argv[]) {
@@ -32,24 +26,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Set up signal handlers
-    signal(SIGCHLD, handle_sigchld);
-    signal(SIGALRM, handle_sigalrm);
+    signal(SIGCHLD, handle_sigchld); // Handle child process termination
+    signal(SIGALRM, handle_sigalrm); // Handle alarm signal
 
-    // Fork the process to create a child
-    child_pid = fork();
+    pid = fork(); // Create a child process
 
-    if (child_pid < 0) {
+    if (pid < 0) {
         perror("fork failed");
         return 1;
     }
 
-    if (child_pid == 0) {
+    if (pid == 0) {
         // Child process
-        printf("Child process (PID: %d) is executing the command: %s\n", getpid(), argv[1]);
-        
-        // Execute the command passed as argument
-        execvp(argv[1], &argv[1]);
+        printf("Child process is executing the command: %s\n", argv[1]);
+        execvp(argv[1], &argv[1]); // Execute the command
 
         // If execvp returns, it means there was an error
         perror("exec failed");
@@ -57,11 +47,7 @@ int main(int argc, char *argv[]) {
     } else {
         // Parent process
         alarm(5); // Set an alarm for 5 seconds
-
-        // Wait for the child process to terminate
-        while (1) {
-            pause(); // Wait for signals
-        }
+        pause();  // Wait for signals (SIGCHLD or SIGALRM)
     }
 
     return 0;
