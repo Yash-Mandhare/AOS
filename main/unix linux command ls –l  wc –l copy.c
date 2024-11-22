@@ -14,7 +14,7 @@ void block_signals() {
     sigset_t set;
     sigemptyset(&set);
     sigaddset(&set, SIGINT);  // Block Ctrl-C
-    sigaddset(&set, SIGQUIT); // Block Ctrl-\
+    sigaddset(&set, SIGQUIT); // Block Ctrl-
     sigprocmask(SIG_BLOCK, &set, NULL); // Apply the signal mask
 }
 
@@ -22,7 +22,7 @@ void unblock_signals() {
     sigset_t set;
     sigemptyset(&set);
     sigaddset(&set, SIGINT);  // Unblock Ctrl-C
-    sigaddset(&set, SIGQUIT); // Unblock Ctrl-\
+    sigaddset(&set, SIGQUIT); // Unblock Ctrl-
     sigprocmask(SIG_UNBLOCK, &set, NULL); // Apply the signal mask
 }
 

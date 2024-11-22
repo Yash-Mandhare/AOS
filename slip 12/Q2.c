@@ -3,58 +3,36 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-
-typedef struct {
-    char *filename;
-    off_t size; // File size
-} FileInfo;
-
-// Comparison function for sorting
-int compare(const void *a, const void *b) {
-    FileInfo *fileA = (FileInfo *)a;
-    FileInfo *fileB = (FileInfo *)b;
-    return (fileA->size - fileB->size);
-}
+#include <unistd.h>
+#include <string.h>  // Add this line to include string.h for strcat
 
 int main(int argc, char *argv[]) {
-    int i;
+    // Check if the number of arguments is less than 2 (meaning no files provided)
     if (argc < 2) {
-        printf("Usage: %s <file1> <file2> ...\n", argv[0]);
+        fprintf(stderr, "Usage: %s <file1> <file2> ... <fileN>\n", argv[0]);
         return 1;
     }
 
-    FileInfo *files = malloc((argc - 1) * sizeof(FileInfo));
-    if (files == NULL) {
-        perror("malloc");
-        return 1;
-    }
-
-    // Get sizes of the files
+    // Prepare the command to execute
+    char command[1024] = "ls -l";
+    int i;
+    // Add all the files provided in the command-line arguments to the ls command
     for (i = 1; i < argc; i++) {
-        struct stat fileStat;
-        if (stat(argv[i], &fileStat) == -1) {
-            perror(argv[i]);
-            free(files);
-            continue; // Skip this file if it doesn't exist or can't be accessed
-        }
-        files[i - 1].filename = argv[i];
-        files[i - 1].size = fileStat.st_size;
+        strcat(command, " ");
+        strcat(command, argv[i]);
     }
 
-    // Sort the files based on size
-    qsort(files, argc - 1, sizeof(FileInfo), compare);
+    // Add the sorting part of the command
+    strcat(command, " | sort -k5,5n");
 
-    // Display the filenames in ascending order according to their sizes
-    printf("Files sorted by size (ascending order):\n");
-    for ( i= 0; i < argc - 1; i++) {
-        printf("%s: %ld bytes\n", files[i].filename, files[i].size);
-    }
+    // Execute the constructed command
+    execlp("sh", "sh", "-c", command, (char *)NULL);
 
-    free(files);
-    return 0;
+    // If execlp fails, print an error
+    perror("execlp failed");
+    return 1;
 }
+
 
 
 // [smile@localhost slip os 6sem]$ ./a.out file1.txt file2.txt

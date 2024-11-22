@@ -55,6 +55,7 @@ int main() {
         close(pipefd[1]); // Close original write end
 
         // Execute 'wc -l'
+  
         execlp("wc", "wc", "-l", NULL);
         perror("execlp"); // Only reached if exec fails
         exit(EXIT_FAILURE);

@@ -1,7 +1,4 @@
-// Write a C program which creates a child process and child process catches a signal SIGHUP,
-// SIGINT and SIGQUIT. The Parent process send a SIGHUP or SIGINT signal after every 3
-// seconds, at the end of 15 second parent send SIGQUIT signal to child and child terminates by
-// displaying message "My Papa has Killed me!!!”.
+// Write a C program which creates a child process and child process catches a signal SIGHUP, SIGINT and SIGQUIT. The Parent process send a SIGHUP or SIGINT signal after every 3 seconds, at the end of 15 second parent send SIGQUIT signal to child and child terminates by displaying message "My Papa has Killed me!!!”.
 
 #include <stdio.h>
 #include <stdlib.h>
